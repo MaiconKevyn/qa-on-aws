@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="upload-section">
+    <div class="upload-card">
+        <h2>Upload de PDF</h2>
+        <p class="description">Selecione ou arraste um arquivo PDF para fazer upload no Amazon S3</p>
+        
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-zone-content">
+                    <div class="upload-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Arraste um arquivo PDF aqui</h3>
+                    <p>ou <button type="button" class="browse-btn" id="browseBtn">clique para selecionar</button></p>
+                    <p class="file-info">Tamanho máximo: 10MB • Formato: PDF</p>
+                </div>
+            </div>
+            
+            <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+            
+            <div class="file-selected" id="fileSelected" style="display: none;">
+                <div class="selected-file-info">
+                    <div class="file-icon">📄</div>
+                    <div class="file-details">
+                        <span class="file-name" id="fileName"></span>
+                        <span class="file-size" id="fileSize"></span>
+                    </div>
+                    <button type="button" class="remove-file" id="removeFile">&times;</button>
+                </div>
+            </div>
+            
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">0%</span>
+            </div>
+            
+            <button type="submit" class="upload-btn" id="uploadBtn" disabled>
+                <span class="upload-btn-text">Fazer Upload</span>
+                <span class="upload-btn-loading" style="display: none;">
+                    <span class="spinner"></span>
+                    Enviando...
+                </span>
+            </button>
+        </form>
+        
+        <div class="message-container">
+            <div class="success-message" id="successMessage" style="display: none;"></div>
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <div class="info-section">
+        <h3>Informações do Sistema</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Formato Aceito</strong>
+                <span>PDF (.pdf)</span>
+            </div>
+            <div class="info-item">
+                <strong>Tamanho Máximo</strong>
+                <span>10 MB</span>
+            </div>
+            <div class="info-item">
+                <strong>Armazenamento</strong>
+                <span>Amazon S3</span>
+            </div>
+            <div class="info-item">
+                <strong>Segurança</strong>
+                <span>Upload Seguro</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

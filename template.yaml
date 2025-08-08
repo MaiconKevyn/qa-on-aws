@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'QA on AWS - Simple PDF processing with Step Functions'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    Description: Environment name
+
+Resources:
+  # S3 Bucket
+  PDFBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'qa-on-aws-${Environment}-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # Lambda Function
+  ProcessPDFFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'qa-on-aws-${Environment}-process-pdf'
+      CodeUri: lambdas/
+      Handler: process_pdf.lambda_handler
+      Runtime: python3.11
+      Timeout: 60
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref PDFBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref PDFBucket
+
+  # Step Functions State Machine
+  ProcessingStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub 'qa-on-aws-${Environment}-processing'
+      DefinitionUri: state_machines/processing.json
+      DefinitionSubstitutions:
+        ProcessPDFFunctionArn: !GetAtt ProcessPDFFunction.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ProcessPDFFunction
+
+Outputs:
+  BucketName:
+    Value: !Ref PDFBucket
+  StateMachineArn:
+    Value: !Ref ProcessingStateMachine

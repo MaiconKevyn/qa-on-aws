@@ -1,0 +1,11 @@
+{
+  "Comment": "Simple PDF processing workflow",
+  "StartAt": "ProcessPDF",
+  "States": {
+    "ProcessPDF": {
+      "Type": "Task",
+      "Resource": "${ProcessPDFFunctionArn}",
+      "End": true
+    }
+  }
+}
