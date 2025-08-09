@@ -41,4 +41,4 @@ jobs:
 
     - name: Deploy SAM application
       run: |
-        sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name qa-on-aws-dev --capabilities CAPABILITY_IAM --region ${{ env.AWS_REGION }} --parameter-overrides Environment=dev --resolve-s3
+        sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name qa-on-aws-dev --capabilities CAPABILITY_IAM --region ${{ env.AWS_REGION }} --parameter-overrides Environment=dev --s3-bucket source-pdf-qa-aws --s3-prefix sam-artifacts
