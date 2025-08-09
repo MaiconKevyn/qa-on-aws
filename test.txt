@@ -1,0 +1,9 @@
+Este é um arquivo de teste para o pipeline RAG.
+
+O pipeline deve:
+1. Extrair este texto
+2. Gerar embeddings
+3. Indexar no OpenSearch
+4. Criar um resumo
+
+Esta é uma demonstração do funcionamento do sistema de processamento de documentos usando AWS Lambda, Step Functions, S3 e Amazon Bedrock.

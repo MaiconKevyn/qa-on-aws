@@ -1,0 +1,37 @@
+{
+  "document_id": "uploads/test-trigger.pdf",
+  "source_bucket": "source-pdf-qa-aws",
+  "source_key": "uploads/test-trigger.pdf",
+  "total_pages": 1,
+  "chunks": [
+    {
+      "page": 1,
+      "chunk_id": "page_1_chunk_1",
+      "text": "Maicon Kevyn Moraes\nData Scientist\nPERSONAL DATA\nEmail:\nosonodenewton@gmail.com\nLinkedIn:\nlinkedin.com/in/maiconkevyn/\nEDUCATION\n2021 - 2026\nBachelor Degree in Astrophysics,\nUniversidade Federal do Rio\nGrande do Sul - UFRGS\n2023 - Aug/2025\nAssociate Degree in Data Science, Centro Universit\u00e1rio Internacional\n- UNINTER\nWORK EXPERIENCE\nJan/2025 - Present\nAssociate Data Scientist\n\u2022 Enhanced information extraction accuracy by implementing a RAG archi-\ntecture with LLM optimization, prompt engineering, and AWS OpenSearch\nhybrid vector search.\n\u2022 Automated payroll data extraction from diverse \ufb01le formats using Google\nCloud Document AI to streamline data ingestion for UI applications.\n\u2022 Developed ML models on Databricks and engineered automated data\nprocessing work\ufb02ows utilizing AWS Lambda, S3, and Step Functions.\n\u2022 Optimized end-to-end classi\ufb01cation pipelines with pandas and scikit-\nlearn, integrating XGBoost and Random Forest to boost model accuracy\nand inference ef\ufb01ciency.",
+      "char_count": 981
+    },
+    {
+      "page": 1,
+      "chunk_id": "page_1_chunk_2",
+      "text": "cikit-\nlearn, integrating XGBoost and Random Forest to boost model accuracy\nand inference ef\ufb01ciency.\nFev/2024 - Jan/2025\nData Science Intern - ADP Brazil Labs\n\u2022 Conducted comparative analysis of LLMs (huggingface models vs Ope-\nnAI models) for sentiment analysis and topic modeling based on system\nfeedback; models are now in production to monitor application metrics of\nU.S. users.\nFeb/2022 - Aug/2022\nData Engineer Intern - Lojas Renner SA\n\u2022 Leveraged PySpark on Azure Databricks to process and optimize silver\nand gold data layers within a medallion architecture for large-scale datasets\nand building data pipelines using Azure Data Factory.\nAug/2022 - Jan/2024\nStudent researcher - Astronomy Department at UFRGS\n\u2022 Use Python and SQL for the extraction, cleaning, and preparation of as-\ntronomical datasets from SLOAN observatory.",
+      "char_count": 833
+    },
+    {
+      "page": 1,
+      "chunk_id": "page_1_chunk_3",
+      "text": "SQL for the extraction, cleaning, and preparation of as-\ntronomical datasets from SLOAN observatory.\nLANGUAGES\n\u2022 Portuguese (Native)\n\u2022 English (Intermediate - B2)\nTECHNICAL SKILLS\n\u2022 Python\n\u2022 SQL\n\u2022 Databricks\n\u2022 Git\nGENERAL SKILLS\n\u2022 Quick learning\n\u2022 Self-Taught\n\u2022 Effective team-working",
+      "char_count": 285
+    }
+  ],
+  "metadata": {
+    "title": "",
+    "author": "",
+    "subject": "",
+    "creator": "LaTeX with hyperref",
+    "producer": "xdvipdfmx (20240305)",
+    "creation_date": "D:20250803204310Z",
+    "modification_date": ""
+  },
+  "extraction_timestamp": "2025-08-09T01:44:48.439766+00:00",
+  "pipeline_stage": "text_extraction"
+}

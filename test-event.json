@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "source-pdf-qa-aws"
+        },
+        "object": {
+          "key": "uploads/test-trigger.pdf"
+        }
+      }
+    }
+  ]
+}
