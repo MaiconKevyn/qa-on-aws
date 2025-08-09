@@ -39,6 +39,12 @@ jobs:
     - name: Build SAM application
       run: sam build
 
+    - name: Delete existing failed stack (if exists)
+      run: |
+        aws cloudformation delete-stack --stack-name qa-on-aws-dev --region ${{ env.AWS_REGION }} || true
+        aws cloudformation wait stack-delete-complete --stack-name qa-on-aws-dev --region ${{ env.AWS_REGION }} || true
+      continue-on-error: true
+
     - name: Deploy SAM application
       run: |
         sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name qa-on-aws-dev --capabilities CAPABILITY_IAM --region ${{ env.AWS_REGION }} --parameter-overrides Environment=dev --s3-bucket source-pdf-qa-aws --s3-prefix sam-artifacts
