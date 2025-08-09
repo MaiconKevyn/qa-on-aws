@@ -1,42 +1,81 @@
 import json
 import boto3
 from typing import List, Dict
+from datetime import datetime, timezone
 
 bedrock_runtime = boto3.client('bedrock-runtime', region_name='us-east-1')
+s3_client = boto3.client('s3', region_name='sa-east-1')
 
 def lambda_handler(event, context):
     """
     Lambda 2: Generate embeddings using Amazon Bedrock
     """
     
-    print(f"Generate Embeddings Lambda - Processing {len(event.get('chunks', []))} chunks")
+    print(f"Generate Embeddings Lambda - Processing document: {event.get('document_id')}")
     
     try:
-        # Get chunks from previous step
-        chunks = event.get('chunks', [])
+        # Get data from previous step
         document_id = event.get('document_id')
-        
-        if not chunks:
-            raise ValueError('No chunks to process')
+        bucket = event.get('bucket')
+        extracted_file_key = event.get('extracted_file_key')
         
         if not document_id:
             raise ValueError('Missing document_id')
         
+        # Read extracted text from S3 JSON file
+        if extracted_file_key:
+            print(f"Reading extracted data from: s3://{bucket}/{extracted_file_key}")
+            response = s3_client.get_object(Bucket=bucket, Key=extracted_file_key)
+            extracted_data = json.loads(response['Body'].read().decode('utf-8'))
+            chunks = extracted_data['chunks']
+        else:
+            # Fallback to chunks passed directly (for backward compatibility)
+            chunks = event.get('chunks', [])
+        
+        if not chunks:
+            raise ValueError('No chunks to process')
+        
+        print(f"Processing {len(chunks)} chunks for embeddings")
+        
         # Generate embeddings for all chunks
         embeddings_data = generate_embeddings_bedrock(chunks)
         
+        # Save embeddings to S3 as JSON
+        embeddings_file_key = f"embeddings/{document_id}.json"
+        embeddings_json = {
+            'document_id': document_id,
+            'source_bucket': bucket,
+            'source_key': event.get('key'),
+            'extracted_file_key': extracted_file_key,
+            'embeddings_data': embeddings_data,
+            'embeddings_count': len(embeddings_data),
+            'embedding_model': 'amazon.titan-embed-text-v1',
+            'embeddings_timestamp': datetime.now(timezone.utc).isoformat(),
+            'pipeline_stage': 'embeddings_generation'
+        }
+        
+        s3_client.put_object(
+            Bucket=bucket,
+            Key=embeddings_file_key,
+            Body=json.dumps(embeddings_json, indent=2),
+            ContentType='application/json'
+        )
+        
         print(f"Successfully generated embeddings for {len(embeddings_data)} chunks")
+        print(f"Saved embeddings data to: s3://{bucket}/{embeddings_file_key}")
         
         return {
             'statusCode': 200,
-            'bucket': event.get('bucket'),
+            'bucket': bucket,
             'key': event.get('key'),
             'document_id': document_id,
             'total_pages': event.get('total_pages'),
             'metadata': event.get('metadata'),
-            'timestamp': event.get('timestamp'),
+            'extracted_file_key': extracted_file_key,
+            'embeddings_file_key': embeddings_file_key,
             'embeddings_data': embeddings_data,
-            'embeddings_count': len(embeddings_data)
+            'embeddings_count': len(embeddings_data),
+            'processing_timestamp': datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:

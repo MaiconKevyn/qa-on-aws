@@ -46,6 +46,14 @@ Resources:
       Policies:
         - S3ReadPolicy:
             BucketName: source-pdf-qa-aws
+        - Statement:
+          - Sid: S3WriteExtracted
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+            Resource: 
+              - arn:aws:s3:::source-pdf-qa-aws/extracted/*
 
   # Lambda 2: Generate Embeddings
   GenerateEmbeddingsFunction:
@@ -65,6 +73,15 @@ Resources:
               - bedrock:InvokeModel
             Resource:
               - arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v1
+        - Statement:
+          - Sid: S3ReadWrite
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource: 
+              - arn:aws:s3:::source-pdf-qa-aws/extracted/*
+              - arn:aws:s3:::source-pdf-qa-aws/embeddings/*
 
   # Lambda 3: Index to OpenSearch
   IndexOpenSearchFunction:
@@ -85,6 +102,15 @@ Resources:
               - es:ESHttpPut
               - aoss:APIAccessAll
             Resource: "*"
+        - Statement:
+          - Sid: S3ReadWriteIndexed
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource: 
+              - arn:aws:s3:::source-pdf-qa-aws/embeddings/*
+              - arn:aws:s3:::source-pdf-qa-aws/indexed/*
 
   # Lambda 4: Update Metadata
   UpdateMetadataFunction:
@@ -98,13 +124,14 @@ Resources:
       MemorySize: 256
       Policies:
         - Statement:
-          - Sid: DynamoDBAccess
+          - Sid: S3WriteSummaries
             Effect: Allow
             Action:
-              - dynamodb:PutItem
-              - dynamodb:UpdateItem
-              - dynamodb:GetItem
-            Resource: "*"
+              - s3:PutObject
+              - s3:GetObject
+            Resource: 
+              - arn:aws:s3:::source-pdf-qa-aws/indexed/*
+              - arn:aws:s3:::source-pdf-qa-aws/summaries/*
 
   # Step Functions State Machine - RAG Pipeline
   RAGProcessingStateMachine:

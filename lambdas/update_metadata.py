@@ -3,11 +3,11 @@ import boto3
 from typing import Dict
 from datetime import datetime, timezone
 
-dynamodb = boto3.resource('dynamodb', region_name='sa-east-1')
+s3_client = boto3.client('s3', region_name='sa-east-1')
 
 def lambda_handler(event, context):
     """
-    Lambda 4: Update document metadata and processing status in DynamoDB
+    Lambda 4: Save processing summary to S3
     """
     
     print(f"Update Metadata Lambda - Processing document: {event.get('document_id')}")
@@ -24,8 +24,8 @@ def lambda_handler(event, context):
         if not document_id:
             raise ValueError('Missing document_id')
         
-        # Update metadata in DynamoDB
-        metadata_result = save_processing_metadata(
+        # Create processing summary and save to S3
+        summary = create_processing_summary(
             document_id=document_id,
             bucket=bucket,
             key=key,
@@ -34,28 +34,33 @@ def lambda_handler(event, context):
             processing_timestamp=processing_timestamp
         )
         
-        print(f"Successfully updated metadata for document: {document_id}")
+        # Save summary to S3
+        summary_file_key = f"summaries/{document_id}.json"
+        s3_client.put_object(
+            Bucket=bucket,
+            Key=summary_file_key,
+            Body=json.dumps(summary, indent=2),
+            ContentType='application/json'
+        )
+        
+        print(f"Processing summary created for document: {document_id}")
+        print(f"Summary saved to: s3://{bucket}/{summary_file_key}")
         
         return {
             'statusCode': 200,
             'document_id': document_id,
             'processing_status': 'completed',
             'indexed_documents': indexed_documents,
-            'dynamodb_updated': metadata_result['success'],
+            'summary_file_key': summary_file_key,
             'completion_timestamp': datetime.now(timezone.utc).isoformat(),
-            'summary': {
-                'bucket': bucket,
-                'key': key,
-                'opensearch_index': opensearch_index,
-                'total_chunks_processed': indexed_documents
-            }
+            'summary': summary
         }
         
     except Exception as e:
-        print(f"Error updating metadata: {str(e)}")
+        print(f"Error creating processing summary: {str(e)}")
         raise Exception(f'Metadata update failed: {str(e)}')
 
-def save_processing_metadata(
+def create_processing_summary(
     document_id: str,
     bucket: str,
     key: str,
@@ -64,44 +69,27 @@ def save_processing_metadata(
     processing_timestamp: str
 ) -> Dict:
     """
-    Save document processing metadata to DynamoDB
+    Create processing summary (placeholder for S3 JSON approach)
     """
     
-    try:
-        # TODO: Create DynamoDB table via SAM template
-        # For now, prepare the data structure
-        
-        table_name = 'qa-on-aws-document-metadata'
-        
-        metadata_item = {
-            'document_id': document_id,
+    summary = {
+        'document_id': document_id,
+        'source': {
             'bucket': bucket,
             'key': key,
-            's3_location': f"s3://{bucket}/{key}",
-            'processing_status': 'completed',
-            'indexed_documents_count': indexed_documents,
-            'opensearch_index': opensearch_index,
+            's3_location': f"s3://{bucket}/{key}"
+        },
+        'processing': {
+            'status': 'completed',
+            'indexed_documents': indexed_documents,
+            'opensearch_index': opensearch_index or 'pending',
             'processing_timestamp': processing_timestamp,
-            'completion_timestamp': datetime.now(timezone.utc).isoformat(),
-            'ttl': int(datetime.now(timezone.utc).timestamp()) + (365 * 24 * 60 * 60)  # 1 year TTL
-        }
-        
-        # TODO: Implement actual DynamoDB put_item
-        # For now, just log the prepared metadata
-        print("Prepared metadata for DynamoDB:")
-        print(json.dumps(metadata_item, indent=2))
-        
-        # Simulate successful save
-        return {
-            'success': True,
-            'table_name': table_name,
-            'message': 'Metadata prepared for DynamoDB (actual save not yet implemented)'
-        }
-        
-    except Exception as e:
-        print(f"Error preparing metadata for DynamoDB: {str(e)}")
-        return {
-            'success': False,
-            'error': str(e),
-            'message': 'Failed to prepare metadata for DynamoDB'
-        }
+            'completion_timestamp': datetime.now(timezone.utc).isoformat()
+        },
+        'pipeline_version': '1.0'
+    }
+    
+    print("Processing summary created (ready for S3 JSON approach):")
+    print(json.dumps(summary, indent=2))
+    
+    return summary

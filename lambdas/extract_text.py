@@ -38,7 +38,28 @@ def lambda_handler(event, context):
         # Extract text using PyMuPDF
         extracted_data = extract_text_from_pdf(pdf_content, key)
         
+        # Save extracted text to S3 as JSON
+        extracted_file_key = f"extracted/{extracted_data['document_id']}.json"
+        extracted_json = {
+            'document_id': extracted_data['document_id'],
+            'source_bucket': bucket,
+            'source_key': key,
+            'total_pages': extracted_data['total_pages'],
+            'chunks': extracted_data['chunks'],
+            'metadata': extracted_data['metadata'],
+            'extraction_timestamp': datetime.now(timezone.utc).isoformat(),
+            'pipeline_stage': 'text_extraction'
+        }
+        
+        s3_client.put_object(
+            Bucket=bucket,
+            Key=extracted_file_key,
+            Body=json.dumps(extracted_json, indent=2),
+            ContentType='application/json'
+        )
+        
         print(f"Successfully extracted {len(extracted_data['chunks'])} text chunks")
+        print(f"Saved extracted data to: s3://{bucket}/{extracted_file_key}")
         
         return {
             'statusCode': 200,
@@ -48,7 +69,8 @@ def lambda_handler(event, context):
             'total_pages': extracted_data['total_pages'],
             'chunks': extracted_data['chunks'],
             'metadata': extracted_data['metadata'],
-            'timestamp': datetime.now(timezone.utc).isoformat()
+            'extracted_file_key': extracted_file_key,
+            'processing_timestamp': datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:
