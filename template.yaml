@@ -9,18 +9,50 @@ Parameters:
     Description: Environment name
 
 Resources:
-  # S3 Bucket (usando bucket existente)
-  # Como o bucket já existe, vamos apenas referenciar
-
-  # Lambda Function
-  ProcessPDFFunction:
+  # S3 Trigger Lambda: Start Step Function on PDF upload
+  TriggerStepFunctionLambda:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub 'qa-on-aws-${Environment}-process-pdf'
+      FunctionName: !Sub 'qa-on-aws-${Environment}-trigger-step-function'
       CodeUri: lambdas/
-      Handler: process_pdf.lambda_handler
+      Handler: trigger_step_function.lambda_handler
       Runtime: python3.11
       Timeout: 60
+      MemorySize: 256
+      Environment:
+        Variables:
+          STEP_FUNCTION_ARN: !Ref RAGProcessingStateMachine
+      Policies:
+        - Statement:
+          - Sid: StartStepFunction
+            Effect: Allow
+            Action:
+              - states:StartExecution
+            Resource: !Ref RAGProcessingStateMachine
+      Events:
+        S3Upload:
+          Type: S3
+          Properties:
+            Bucket: source-pdf-qa-aws
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: uploads/
+                  - Name: suffix
+                    Value: .pdf
+
+  # Lambda 1: Extract Text from PDF
+  ExtractTextFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'qa-on-aws-${Environment}-extract-text'
+      CodeUri: lambdas/
+      Handler: extract_text.lambda_handler
+      Runtime: python3.11
+      Timeout: 300
+      MemorySize: 1024
       Environment:
         Variables:
           BUCKET_NAME: source-pdf-qa-aws
@@ -28,22 +60,96 @@ Resources:
         - S3ReadPolicy:
             BucketName: source-pdf-qa-aws
 
-  # Step Functions State Machine
-  ProcessingStateMachine:
+  # Lambda 2: Generate Embeddings
+  GenerateEmbeddingsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'qa-on-aws-${Environment}-generate-embeddings'
+      CodeUri: lambdas/
+      Handler: generate_embeddings.lambda_handler
+      Runtime: python3.11
+      Timeout: 900
+      MemorySize: 1024
+      Policies:
+        - Statement:
+          - Sid: BedrockInvokeModel
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource:
+              - arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v1
+
+  # Lambda 3: Index to OpenSearch
+  IndexOpenSearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'qa-on-aws-${Environment}-index-opensearch'
+      CodeUri: lambdas/
+      Handler: index_opensearch.lambda_handler
+      Runtime: python3.11
+      Timeout: 300
+      MemorySize: 512
+      Policies:
+        - Statement:
+          - Sid: OpenSearchAccess
+            Effect: Allow
+            Action:
+              - es:ESHttpPost
+              - es:ESHttpPut
+              - aoss:APIAccessAll
+            Resource: "*"
+
+  # Lambda 4: Update Metadata
+  UpdateMetadataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'qa-on-aws-${Environment}-update-metadata'
+      CodeUri: lambdas/
+      Handler: update_metadata.lambda_handler
+      Runtime: python3.11
+      Timeout: 60
+      MemorySize: 256
+      Policies:
+        - Statement:
+          - Sid: DynamoDBAccess
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:GetItem
+            Resource: "*"
+
+  # Step Functions State Machine - RAG Pipeline
+  RAGProcessingStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
-      Name: !Sub 'qa-on-aws-${Environment}-processing'
+      Name: !Sub 'qa-on-aws-${Environment}-rag-pipeline'
       DefinitionUri: state_machines/processing.json
       DefinitionSubstitutions:
-        ProcessPDFFunctionArn: !GetAtt ProcessPDFFunction.Arn
+        ExtractTextFunctionArn: !GetAtt ExtractTextFunction.Arn
+        GenerateEmbeddingsFunctionArn: !GetAtt GenerateEmbeddingsFunction.Arn
+        IndexOpenSearchFunctionArn: !GetAtt IndexOpenSearchFunction.Arn
+        UpdateMetadataFunctionArn: !GetAtt UpdateMetadataFunction.Arn
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref ProcessPDFFunction
+            FunctionName: !Ref ExtractTextFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GenerateEmbeddingsFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref IndexOpenSearchFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref UpdateMetadataFunction
 
 Outputs:
   BucketName:
     Value: source-pdf-qa-aws
-  StateMachineArn:
-    Value: !Ref ProcessingStateMachine
-  LambdaFunctionArn:
-    Value: !GetAtt ProcessPDFFunction.Arn
+  RAGStateMachineArn:
+    Value: !Ref RAGProcessingStateMachine
+  ExtractTextLambdaArn:
+    Value: !GetAtt ExtractTextFunction.Arn
+  GenerateEmbeddingsLambdaArn:
+    Value: !GetAtt GenerateEmbeddingsFunction.Arn
+  IndexOpenSearchLambdaArn:
+    Value: !GetAtt IndexOpenSearchFunction.Arn
+  UpdateMetadataLambdaArn:
+    Value: !GetAtt UpdateMetadataFunction.Arn

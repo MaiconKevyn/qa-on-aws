@@ -1,10 +1,108 @@
 {
-  "Comment": "Simple PDF processing workflow",
-  "StartAt": "ProcessPDF",
+  "Comment": "RAG Pipeline: PDF to OpenSearch with embeddings",
+  "StartAt": "ExtractText",
   "States": {
-    "ProcessPDF": {
+    "ExtractText": {
       "Type": "Task",
-      "Resource": "${ProcessPDFFunctionArn}",
+      "Resource": "${ExtractTextFunctionArn}",
+      "ResultPath": "$",
+      "Next": "GenerateEmbeddings",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ProcessingFailed",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "GenerateEmbeddings": {
+      "Type": "Task",
+      "Resource": "${GenerateEmbeddingsFunctionArn}",
+      "ResultPath": "$",
+      "Next": "IndexToOpenSearch",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ProcessingFailed",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "IndexToOpenSearch": {
+      "Type": "Task",
+      "Resource": "${IndexOpenSearchFunctionArn}",
+      "ResultPath": "$",
+      "Next": "UpdateMetadata",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ProcessingFailed",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "UpdateMetadata": {
+      "Type": "Task",
+      "Resource": "${UpdateMetadataFunctionArn}",
+      "ResultPath": "$",
+      "Next": "ProcessingComplete",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ProcessingFailed",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "ProcessingComplete": {
+      "Type": "Pass",
+      "Parameters": {
+        "status": "SUCCESS",
+        "message": "PDF processed successfully and indexed to OpenSearch",
+        "document_id.$": "$.document_id",
+        "indexed_documents.$": "$.indexed_documents",
+        "completion_timestamp.$": "$.completion_timestamp"
+      },
+      "End": true
+    },
+    "ProcessingFailed": {
+      "Type": "Pass",
+      "Parameters": {
+        "status": "FAILED",
+        "error.$": "$.error",
+        "message": "PDF processing pipeline failed"
+      },
       "End": true
     }
   }
