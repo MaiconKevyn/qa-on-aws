@@ -29,19 +29,6 @@ Resources:
             Action:
               - states:StartExecution
             Resource: !Ref RAGProcessingStateMachine
-      Events:
-        S3Upload:
-          Type: S3
-          Properties:
-            Bucket: source-pdf-qa-aws
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: prefix
-                    Value: uploads/
-                  - Name: suffix
-                    Value: .pdf
 
   # Lambda 1: Extract Text from PDF
   ExtractTextFunction:
@@ -145,6 +132,9 @@ Outputs:
     Value: source-pdf-qa-aws
   RAGStateMachineArn:
     Value: !Ref RAGProcessingStateMachine
+  TriggerLambdaArn:
+    Value: !GetAtt TriggerStepFunctionLambda.Arn
+    Description: "Configure this Lambda as S3 event trigger manually"
   ExtractTextLambdaArn:
     Value: !GetAtt ExtractTextFunction.Arn
   GenerateEmbeddingsLambdaArn:
@@ -153,3 +143,6 @@ Outputs:
     Value: !GetAtt IndexOpenSearchFunction.Arn
   UpdateMetadataLambdaArn:
     Value: !GetAtt UpdateMetadataFunction.Arn
+  ManualS3Configuration:
+    Value: "After deployment, configure S3 bucket 'source-pdf-qa-aws' to trigger TriggerStepFunctionLambda on uploads/*.pdf"
+    Description: "S3 Event Configuration Required"
