@@ -28,8 +28,11 @@ aws configure
 
 ### 2. Executar Setup Completo
 ```bash
-# Configurar estrutura S3 e triggers
+# Configurar estrutura S3 e triggers (recomendado)
 python3 setup_complete_pipeline.py
+
+# OU configurar apenas o trigger (se já tiver estrutura S3)
+python3 configure_s3_trigger.py
 ```
 
 ### 3. Testar o Pipeline

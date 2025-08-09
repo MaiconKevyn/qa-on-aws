@@ -1,9 +1,0 @@
-Este é um documento PDF de teste.
-
-O pipeline RAG deve processar este documento e:
-1. Extrair o texto
-2. Gerar embeddings
-3. Indexar no OpenSearch
-4. Salvar os resultados em JSON
-
-Teste do pipeline AWS Lambda + Step Functions.

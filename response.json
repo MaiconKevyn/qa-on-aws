@@ -1,1 +1,0 @@
-{"statusCode": 200, "body": {"message": "Step Function execution started successfully", "executionArn": "arn:aws:states:sa-east-1:498504717701:execution:qa-on-aws-dev-rag-pipeline:pdf-processing-uploads-test-trigger-pdf-bd8a8d05", "bucket": "source-pdf-qa-aws", "key": "uploads/test-trigger.pdf"}}
