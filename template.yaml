@@ -9,16 +9,8 @@ Parameters:
     Description: Environment name
 
 Resources:
-  # S3 Bucket
-  PDFBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub 'qa-on-aws-${Environment}-${AWS::AccountId}'
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+  # S3 Bucket (usando bucket existente)
+  # Como o bucket já existe, vamos apenas referenciar
 
   # Lambda Function
   ProcessPDFFunction:
@@ -31,10 +23,10 @@ Resources:
       Timeout: 60
       Environment:
         Variables:
-          BUCKET_NAME: !Ref PDFBucket
+          BUCKET_NAME: source-pdf-qa-aws
       Policies:
         - S3ReadPolicy:
-            BucketName: !Ref PDFBucket
+            BucketName: source-pdf-qa-aws
 
   # Step Functions State Machine
   ProcessingStateMachine:
@@ -50,6 +42,8 @@ Resources:
 
 Outputs:
   BucketName:
-    Value: !Ref PDFBucket
+    Value: source-pdf-qa-aws
   StateMachineArn:
     Value: !Ref ProcessingStateMachine
+  LambdaFunctionArn:
+    Value: !GetAtt ProcessPDFFunction.Arn

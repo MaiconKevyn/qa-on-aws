@@ -1,10 +1,15 @@
 from flask import Flask
 import logging
+import os
 from app.config.settings import Config
 from app.routes.upload import upload_bp
 
 def create_app():
-    app = Flask(__name__)
+    # Define paths relativo à raiz do projeto
+    template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
+    static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static'))
+    
+    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     
     app.config['SECRET_KEY'] = Config.FLASK_SECRET_KEY
     app.config['MAX_CONTENT_LENGTH'] = Config.MAX_FILE_SIZE_MB * 1024 * 1024
