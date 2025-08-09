@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Upload - QA on AWS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-upload text-primary"></i> Upload de Documentos PDF
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-upload"></i> Selecione um arquivo PDF
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="upload-zone">
+                        <i class="fas fa-cloud-upload-alt fa-4x text-primary mb-3"></i>
+                        <h4>Arraste e solte ou clique para selecionar</h4>
+                        <p class="text-muted mb-4">Apenas arquivos PDF são aceitos</p>
+                        
+                        <div class="mb-3">
+                            <input type="file" 
+                                   class="form-control form-control-lg" 
+                                   name="file" 
+                                   id="file" 
+                                   accept=".pdf"
+                                   required
+                                   onchange="updateFileName(this)">
+                        </div>
+                        
+                        <div id="file-info" class="file-info" style="display: none;">
+                            <i class="fas fa-file-pdf text-danger"></i>
+                            <strong>Arquivo selecionado:</strong> 
+                            <span id="file-name"></span>
+                            <br>
+                            <small class="text-muted">
+                                <span id="file-size"></span>
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-upload"></i> Enviar para S3
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Processo após o Upload
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="p-2">
+                            <i class="fas fa-upload fa-2x text-primary"></i>
+                            <h6 class="mt-2">1. Upload S3</h6>
+                            <small>Arquivo enviado para o bucket S3</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-2">
+                            <i class="fas fa-file-text fa-2x text-warning"></i>
+                            <h6 class="mt-2">2. Extração</h6>
+                            <small>Texto extraído do PDF</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-2">
+                            <i class="fas fa-vector-square fa-2x text-success"></i>
+                            <h6 class="mt-2">3. Embeddings</h6>
+                            <small>Vetores gerados via Bedrock</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-2">
+                            <i class="fas fa-search fa-2x text-info"></i>
+                            <h6 class="mt-2">4. Indexação</h6>
+                            <small>Dados indexados no OpenSearch</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateFileName(input) {
+    const fileInfo = document.getElementById('file-info');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        fileName.textContent = file.name;
+        
+        // Format file size
+        const size = file.size;
+        let sizeText;
+        if (size < 1024) {
+            sizeText = size + ' bytes';
+        } else if (size < 1024 * 1024) {
+            sizeText = Math.round(size / 1024) + ' KB';
+        } else {
+            sizeText = Math.round(size / (1024 * 1024)) + ' MB';
+        }
+        
+        fileSize.textContent = 'Tamanho: ' + sizeText;
+        fileInfo.style.display = 'block';
+    } else {
+        fileInfo.style.display = 'none';
+    }
+}
+
+// Drag and drop functionality
+const uploadZone = document.querySelector('.upload-zone');
+const fileInput = document.getElementById('file');
+
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.style.borderColor = '#0056b3';
+    uploadZone.style.backgroundColor = '#f8f9fa';
+});
+
+uploadZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    uploadZone.style.borderColor = '#007bff';
+    uploadZone.style.backgroundColor = '';
+});
+
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.style.borderColor = '#007bff';
+    uploadZone.style.backgroundColor = '';
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type === 'application/pdf') {
+        fileInput.files = files;
+        updateFileName(fileInput);
+    } else {
+        alert('Por favor, selecione apenas arquivos PDF.');
+    }
+});
+
+uploadZone.addEventListener('click', () => {
+    fileInput.click();
+});
+</script>
+{% endblock %}

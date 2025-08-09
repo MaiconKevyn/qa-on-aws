@@ -58,7 +58,7 @@ def configure_s3_trigger():
         
         # 2. Configurar notificação no S3
         notification_config = {
-            'LambdaConfigurations': [
+            'LambdaFunctionConfigurations': [
                 {
                     'Id': 'pdf-upload-trigger',
                     'LambdaFunctionArn': trigger_lambda_arn,

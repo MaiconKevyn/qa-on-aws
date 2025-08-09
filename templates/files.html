@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Arquivos - QA on AWS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-files-o text-info"></i> Arquivos Processados
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Lista de Arquivos no S3
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if files %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th><i class="fas fa-file"></i> Nome do Arquivo</th>
+                                    <th><i class="fas fa-weight"></i> Tamanho</th>
+                                    <th><i class="fas fa-calendar"></i> Data de Upload</th>
+                                    <th><i class="fas fa-cogs"></i> Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in files %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-file-pdf text-danger me-2"></i>
+                                        <strong>{{ file.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ file.key }}</small>
+                                    </td>
+                                    <td>
+                                        {% if file.size < 1024 %}
+                                            {{ file.size }} bytes
+                                        {% elif file.size < 1024 * 1024 %}
+                                            {{ "%.1f" | format(file.size / 1024) }} KB
+                                        {% else %}
+                                            {{ "%.1f" | format(file.size / (1024 * 1024)) }} MB
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ file.modified }}</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check"></i> Enviado
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">Nenhum arquivo encontrado</h4>
+                        <p class="text-muted">Nenhum arquivo foi enviado ainda para o bucket S3.</p>
+                        <a href="{{ url_for('upload_file') }}" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Fazer o Primeiro Upload
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Sobre os Status de Processamento
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <span class="badge bg-success me-2">
+                            <i class="fas fa-check"></i> Enviado
+                        </span>
+                        <small>Arquivo no S3</small>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-warning text-dark me-2">
+                            <i class="fas fa-spinner"></i> Processando
+                        </span>
+                        <small>Step Function em execução</small>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-info me-2">
+                            <i class="fas fa-cog"></i> Indexando
+                        </span>
+                        <small>Dados sendo indexados</small>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-success me-2">
+                            <i class="fas fa-check-double"></i> Concluído
+                        </span>
+                        <small>Processamento completo</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('upload_file') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus"></i> Enviar Novo Arquivo
+        </a>
+    </div>
+</div>
+{% endblock %}
