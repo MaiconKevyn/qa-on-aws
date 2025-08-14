@@ -127,7 +127,7 @@ def test_pipeline():
         return True
         
     except Exception as e:
-        print(f"❌ Erro no teste: {e}")
+        print(f"Erro no teste: {e}")
         return False
 
 if __name__ == "__main__":
